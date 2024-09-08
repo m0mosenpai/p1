@@ -10,7 +10,7 @@
 #define MIN_DICT_SIZE 10
 #define MAX_CHARS 26
 
-void recurse(int i);
+int recurse(size_t sideCount, char **sides, size_t wordCount, char **words, size_t wordSize, size_t dictMaxWordSize);
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
@@ -108,7 +108,19 @@ int main(int argc, char* argv[]) {
     /*    printf("%s", words[i]);*/
     /*}*/
 
-    // TO-DO: Main Letter Boxed Logic
+    recurse(sideCount, sides, wordCount, words, 0, dictMaxWordSize);
+
+    return 0;
+}
+
+int recurse(size_t sideCount, char **sides, size_t wordCount, char **words, size_t wordSize, size_t dictMaxWordSize) {
+    if (wordSize > dictMaxWordSize) {
+        return 1;
+    }
+
+    for (size_t i = 0; i < sideCount; i++) {
+        printf("%s", sides[i]);
+    }
 
     return 0;
 }
