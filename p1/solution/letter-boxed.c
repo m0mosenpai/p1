@@ -8,6 +8,9 @@
 
 #define MIN_BOARD_SIZE 3
 #define MIN_DICT_SIZE 10
+#define MAX_CHARS 26
+
+void recurse(int i);
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
@@ -27,30 +30,37 @@ int main(int argc, char* argv[]) {
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
+    int *letterCount = calloc(MAX_CHARS, sizeof(int));
     char **sides = malloc(MIN_BOARD_SIZE * sizeof(char*));
     size_t boardSize = MIN_BOARD_SIZE;
     size_t sideCount = 0;
     // how to make sure "line" memory is freed if getline() errors out?
+    // possibly inefficient: reading chars in a line twice
     while ((read = getline(&line, &len, board)) != -1) {
+        // validate characters in the board are unique and lowercase only
+        for (size_t i = 0; i < strlen(line); i++) {
+            if (line[i] == '\n') continue;
+            int letterIdx = (int) line[i] - 97;
+            if (!islower(line[i]) || !(letterIdx >= 0 && letterIdx < MAX_CHARS && letterCount[letterIdx] == 0)) {
+                fprintf(stderr, "Invalid Board\n");
+                free(letterCount);
+                free(line);
+                free(sides);
+                fclose(board);
+                return 1;
+            }
+            letterCount[letterIdx] += 1;
+        }
+
         if (sideCount >= boardSize) {
             boardSize *= 2;
             sides = realloc(sides, boardSize * sizeof(char*));
         }
         sides[sideCount] = malloc(strlen(line) + 1);
-
-        // validate line only contains lowercase alphabets
-        for (size_t i = 0; i < strlen(line); i++) {
-            if (line[i] == '\n') continue;
-            if (!islower(line[i])) {
-                fprintf(stderr, "Invalid Board\n");
-                free(line);
-                fclose(board);
-                return 1;
-            }
-        }
         strcpy(sides[sideCount], line);
         sideCount += 1;
     }
+    free(letterCount);
     free(line);
     fclose(board);
 
@@ -75,13 +85,20 @@ int main(int argc, char* argv[]) {
     char **words = malloc(MIN_DICT_SIZE * sizeof(char*));
     size_t dictSize = MIN_DICT_SIZE;
     size_t wordCount = 0;
+    size_t dictMaxWordSize = 0;
     while ((read = getline(&word, &len, dict)) != -1) {
+        size_t wordSize = strlen(word);
+        if (wordSize > dictMaxWordSize) {
+            // exclude the newline char
+            dictMaxWordSize = wordSize - 1;
+        }
+
         if (wordCount >= dictSize) {
             dictSize *= 2;
             words = realloc(words, dictSize * sizeof(char*));
         }
-        words[wordCount] = malloc(strlen(line) + 1);
-        strcpy(words[wordCount], line);
+        words[wordCount] = malloc(wordSize + 1);
+        strcpy(words[wordCount], word);
         wordCount += 1;
     }
     free(word);
