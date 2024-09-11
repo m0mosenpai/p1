@@ -31,12 +31,14 @@ int main(int argc, char* argv[]) {
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
+    size_t totalUniqueLetters = 0;
     int *letterCount = calloc(MAX_CHARS, sizeof(int));
     int *lettersUsed = calloc(MAX_CHARS, sizeof(int));
     int *letterSideMap = malloc(MAX_CHARS * sizeof(int));
     char **sides = malloc(MIN_BOARD_SIZE * sizeof(char*));
     size_t boardSize = MIN_BOARD_SIZE;
     size_t sideCount = 0;
+
     // how to make sure "line" memory is freed if getline() errors out?
     while ((read = getline(&line, &len, board)) != -1) {
         for (size_t i = 0; i < strlen(line); i++) {
@@ -50,7 +52,11 @@ int main(int argc, char* argv[]) {
                 goto cleanup_board_and_exit;
             }
             letterCount[letterIdx] += 1;
-            lettersUsed[letterIdx] = 1;
+            // if first occurence of letter
+            if (letterCount[letterIdx] == 1) {
+                lettersUsed[letterIdx] = 1;
+                totalUniqueLetters += 1;
+            }
             letterSideMap[letterIdx] = sideCount + 1;
         }
 
@@ -70,13 +76,6 @@ int main(int argc, char* argv[]) {
     }
     free(line);
     fclose(board);
-
-    // print out the board
-    /*printf("Board ->\n\n");*/
-    /*for (size_t i = 0; i < sideCount; i++) {*/
-    /*    printf("%s", sides[i]);*/
-    /*}*/
-    /*printf("\n");*/
 
     const char *dictFile = argv[2];
     FILE *dict = fopen(dictFile, "r");
@@ -108,7 +107,6 @@ int main(int argc, char* argv[]) {
     char *input = NULL;
     char lastLetter = '\0';
     len = 0;
-    /*printf("Enter the solutions ->\n");*/
     while ((read = getline(&input, &len, stdin)) != -1) {
         if (read == 1) continue;
 
@@ -155,14 +153,16 @@ int main(int argc, char* argv[]) {
         for (size_t i = 0; i < wordCount; i++) {
             if (strcmp(words[i], input)) {
                 found = 1;
-                // set used letters back to 0
+                // decrement count for every used letter
                 for (size_t j = 0; j < strlen(input); j++) {
                     if (input[j] == '\n') continue;
 
                     int letterIdx = (int) input[j] - 97;
+                    if (lettersUsed[letterIdx] == 1) totalUniqueLetters--;
                     lettersUsed[letterIdx] = 0;
+                    // if all letters have been used, break
+                    if (totalUniqueLetters == 0) goto success;
                 }
-                break;
             }
         }
         if (found == 0) {
@@ -173,14 +173,13 @@ int main(int argc, char* argv[]) {
     }
 
     // 5. check for unused letters
-    for (size_t i = 0; i < MAX_CHARS; i++) {
-        if (lettersUsed[i] == 1) {
-            printf("Not all letters used\n");
-            rc = 0;
-            goto cleanup_and_exit;
-        }
+    if (totalUniqueLetters != 0) {
+        printf("Not all letters used\n");
+        rc = 0;
+        goto cleanup_and_exit;
     }
 
+success:
     printf("Correct\n");
     rc = 0;
     goto cleanup_and_exit;
