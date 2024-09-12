@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
         // 4. check in dictionary
         int found = 0;
         for (size_t i = 0; i < wordCount; i++) {
-            if (strcmp(words[i], input)) {
+            if (strcmp(words[i], input) == 0) {
                 found = 1;
                 // decrement count for every used letter
                 for (size_t j = 0; j < strlen(input); j++) {
@@ -161,8 +161,9 @@ int main(int argc, char* argv[]) {
                     if (lettersUsed[letterIdx] == 1) totalUniqueLetters--;
                     lettersUsed[letterIdx] = 0;
                     // if all letters have been used, break
-                    if (totalUniqueLetters == 0) goto success;
+                    if (totalUniqueLetters == 0) goto game_win;
                 }
+                break;
             }
         }
         if (found == 0) {
@@ -179,7 +180,7 @@ int main(int argc, char* argv[]) {
         goto cleanup_and_exit;
     }
 
-success:
+game_win:
     printf("Correct\n");
     rc = 0;
     goto cleanup_and_exit;
