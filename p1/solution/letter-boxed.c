@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     fclose(dict);
 
     char *input = NULL;
-    char lastLetter = '\0';
+    char prevWordLastLetter = '\0';
     len = 0;
     while ((read = getline(&input, &len, stdin)) != -1) {
         if (read == 1) continue;
@@ -121,15 +121,17 @@ int main(int argc, char* argv[]) {
                 rc = 0;
                 goto cleanup_and_exit;
             }
+            /*prevWordLastLetter = input[i];*/
         }
 
         // 2. check word continuity
-        if (lastLetter != '\0' && input[0] == lastLetter) {
+        char currWordFirstLetter = input[0];
+        if (prevWordLastLetter != '\0' && currWordFirstLetter != prevWordLastLetter) {
             printf("First letter of word does not match last letter of previous word\n");
             rc = 0;
             goto cleanup_and_exit;
         }
-        lastLetter = input[strlen(input) - 1];
+        prevWordLastLetter = input[strlen(input) - 2];
 
 
         // 3. check for consecutive same-side letters
